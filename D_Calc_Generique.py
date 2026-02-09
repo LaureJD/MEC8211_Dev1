@@ -1,4 +1,5 @@
-## MEC8211 - Devoir 1 - Question D) 
+## MEC8211 - Devoir 1 - Question D
 ## Auteurs : Wadih Chalhoub, Louis-Charles Girouard, Laure Jalbert-Drouin
 ## Creation : 08/02/2026
 ## Modification : 
+
