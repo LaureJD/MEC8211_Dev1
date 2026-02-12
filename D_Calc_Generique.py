@@ -85,3 +85,55 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     C = np.linalg.solve(A, b)
     return r, C
 
+# ----------------------------
+# a) Profils de concentration
+# ----------------------------
+if __name__ == "__main__":
+    N=5
+    
+    r,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)
+    C_analytique=solution_analytique(r, Deff, S, Ce, R)
+
+    # --- Figure 1 : profil
+    plt.figure(figsize=(6,4.5))
+    plt.plot(r, C_analytique, 'k--', lw=2, label='Analytique')
+    plt.plot(r, C_numerique, 'o-', ms=4, label='Numérique (N={})'.format(N))
+    plt.xlabel('r (m)')
+    plt.ylabel('Concentration C (mol/m³)')
+    plt.title("Profil stationnaire C(r) – comparaison analytique vs numérique")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.show()
+    #plt.savefig("N=5.png", dpi=300)
+
+    # --- Figure 2 : 2D cross-section (slice) of the cylinder showing C(x,y)
+    # Build a square grid and map radial solution onto it (mask outside circle)
+    nx = 200
+    x = np.linspace(-R, R, nx)
+    y = np.linspace(-R, R, nx)
+    X, Y = np.meshgrid(x, y)
+    Rgrid = np.sqrt(X**2 + Y**2)
+
+    # prepare 2D concentration array and fill with NaN outside the cylinder
+    C2D = np.full_like(Rgrid, np.nan, dtype=float)
+    inside = Rgrid <= R
+
+    # interpolate the radial numerical solution onto the grid radii
+    C2D[inside] = np.interp(Rgrid[inside], r, C_numerique)
+
+    plt.figure(figsize=(6,6))
+    pcm = plt.pcolormesh(X, Y, C2D, shading='auto', cmap='viridis')
+    plt.colorbar(pcm, label='Concentration C (mol/m³)')
+    # add contour lines for clarity
+    plt.contour(X, Y, C2D, levels=8, colors='k', linewidths=0.5)
+    plt.title('Concentration cross-section (slice)')
+    plt.xlabel('x (m)')
+    plt.ylabel('y (m)')
+    plt.gca().set_aspect('equal')
+    plt.tight_layout()
+    plt.show()
+    plt.savefig("N=5.png", dpi=300)
+
+# ----------------------------
+# Fonctions utilitaires
+# ----------------------------
