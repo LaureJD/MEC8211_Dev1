@@ -1,4 +1,4 @@
-## MEC8211 - Devoir 1 - Question D
+## MEC8211 - Devoir 1 - Question D.a)
 ## Auteurs : Wadih Chalhoub, Louis-Charles Girouard, Laure Jalbert-Drouin
 ## Creation : 09/02/2026
 ## Modification : 
@@ -13,7 +13,7 @@ Discrétisation: différences finies 2e ordre (maillage uniforme)
 
 Sorties :
 - Figure 1 : profil C(r) numérique vs analytique
-- Figure 2 : erreurs L1, L2, Linfty en fonction de N (raffinement)
+
 """
 
 import numpy as np
@@ -58,26 +58,35 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     # Stencil 2e ordre: C''(0) ≈ (2*(C1 - C0))/dr^2
     # De plus, (1/r)C' terme est fini et s'annule avec condition de symétrie.
     # Équation: Deff * [ 2*(C1 - C0)/dr^2 ] - S = 0
-    A[0, 0] = -2.0 * Deff / dr**2
+    
+    A[0, 0] =  -2.0 * Deff / dr**2
     A[0, 1] =  2.0 * Deff / dr**2
     b[0]    =  S
 
     # --- Noeuds intérieurs i=1..N-1
     for i in range(1, N):
         ri = r[i]
-        # Approximation 2e ordre:
-        # C'' ≈ (C_{i+1} - 2C_i + C_{i-1})/dr^2
-        # (1/r)C' ≈ (1/ri)*(C_{i+1} - C_{i-1})/(2dr)
-        aW = Deff * ( 1.0/dr**2 - 1.0/(2.0*ri*dr) )
-        aP = -2.0*Deff/dr**2
-        aE = Deff * ( 1.0/dr**2 + 1.0/(2.0*ri*dr) )
+        # Approximation 2e ordre avec terme cylindrique (1/r)*d/dr(r*dC/dr):
+        # Discrétisation correcte : C'' + (1/r)*C'
+        # où les coefficients incluent le facteur r_{i±1/2}/r_i
+        
+        a1 = Deff * (1.0 / dr**2)                    # C_{i-1}
+        a2 = -2.0 * Deff / dr**2 - Deff / (ri * dr)  # C_i
+        a3 = Deff * (1.0 / dr**2 + 1.0 / (ri * dr))  # C_{i+1}
 
-        A[i, i-1] = aW
-        A[i, i]   = aP
-        A[i, i+1] = aE
+
+        # a3= (Deff/dr**2) * ((dr**2/ri)-1)
+        # a2= (- Deff / dr**2)*(dr/ri+2)
+        # a1= (Deff/dr**2)
+        A[i, i-1] = a1
+        A[i, i]   = a2
+        A[i, i+1] = a3
         b[i]      = S  # passe à droite
 
     # --- Bord i=N : Dirichlet C(R) = Ce
+    # A[0, 0] = A[1, 0]
+    # A[0, 1] = A[1, 1]
+    # b[0]    = b[1]
     A[N, N] = 1.0
     b[N]    = Ce
 
@@ -105,17 +114,17 @@ if __name__ == "__main__":
     r,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)
     C_analytique=solution_analytique(r, Deff, S, Ce, R)
 
-    # --- Figure 1 : profil
-    # plt.figure(figsize=(6,4.5))
-    # plt.plot(r, C_analytique, 'k--', lw=2, label='Analytique')
-    # plt.plot(r, C_numerique, 'o-', ms=4, label='Numérique (N={})'.format(N))
-    # plt.xlabel('r (m)')
-    # plt.ylabel('Concentration C (mol/m³)')
-    # plt.title("Profil stationnaire C(r) – comparaison analytique vs numérique")
-    # plt.grid(True, alpha=0.3)
-    # plt.legend()
-    #plt.show()
-    #plt.savefig("N=5.png", dpi=300)
+    #--- Figure 1 : profil
+    plt.figure(figsize=(6,4.5))
+    plt.plot(r, C_analytique, 'k--', lw=2, label='Analytique')
+    plt.plot(r, C_numerique, 'o-', ms=4, label='Numérique (N={})'.format(N))
+    plt.xlabel('r (m)')
+    plt.ylabel('Concentration C (mol/m³)')
+    plt.title("Profil stationnaire C(r) – comparaison analytique vs numérique")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.show()
+    plt.savefig("N=10.png", dpi=300)
 
     # --- Figure 2 : 2D cross-section (slice) of the cylinder showing C(x,y)
     # Build a square grid and map radial solution onto it (mask outside circle)
@@ -142,8 +151,8 @@ if __name__ == "__main__":
     # plt.ylabel('y (m)')
     # plt.gca().set_aspect('equal')
     # plt.tight_layout()
-    # #plt.show()
-    # #plt.savefig("N=5.png", dpi=300)
+    #plt.show()
+    #plt.savefig("N=5.png", dpi=300)
  
 
 # ----------------------------
@@ -151,25 +160,25 @@ if __name__ == "__main__":
 # ----------------------------
 
 
-if __name__ == "__main__":
-    Ns=[5, 10, 20, 40, 80]
-    L1, L2, Linf = [], [], []
+# if __name__ == "__main__":
+#     Ns=[5, 10, 20, 40, 80]
+#     L1, L2, Linf = [], [], []
 
-    for N in Ns:
-         L1_i, L2_i, Linf_i = normes_erreur(N, Deff, S, Ce, R)
-         L1.append(L1_i)
-         L2.append(L2_i)
-         Linf.append(Linf_i)
+#     for N in Ns:
+#          L1_i, L2_i, Linf_i = normes_erreur(N, Deff, S, Ce, R)
+#          L1.append(L1_i)
+#          L2.append(L2_i)
+#          Linf.append(Linf_i)
     
 
-    plt.figure(figsize=(6,4.5))
-    plt.loglog(Ns, L1, 'o-', ms=4, label='L1 erreur')
-    plt.loglog(Ns, L2, 's-', ms=4, label='L2 erreur')
-    plt.loglog(Ns, Linf, '^-', ms=4, label='Linf erreur')
-    plt.xlabel('Nombre de noeuds N')
-    plt.ylabel('Norme d\'erreur')
-    plt.title("Erreurs numériques – comparaison des normes")
-    plt.grid(True, alpha=0.3)
-    plt.legend()
-    plt.show()
-    plt.savefig("Erreurs.png", dpi=300)
+#     plt.figure(figsize=(6,4.5))
+#     plt.loglog(Ns, L1, 'o-', ms=4, label='L1 erreur')
+#     plt.loglog(Ns, L2, 's-', ms=4, label='L2 erreur')
+#     plt.loglog(Ns, Linf, '^-', ms=4, label='Linf erreur')
+#     plt.xlabel('Nombre de noeuds N')
+#     plt.ylabel('Norme d\'erreur')
+#     plt.title("Erreurs numériques – comparaison des normes")
+#     plt.grid(True, alpha=0.3)
+#     plt.legend()
+#     plt.show()
+#     plt.savefig("Erreurs.png", dpi=300)
