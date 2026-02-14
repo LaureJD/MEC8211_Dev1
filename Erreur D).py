@@ -1,5 +1,5 @@
 ## MEC8211 - Devoir 1 - Question D.b)
-## Auteurs : Wadih Chalhoub, Louis-Charles Girouard, Laure Jalbert-Drouin
+## Auteurs : Laure Jalbert-Drouin
 ## Creation : 13/02/2026
 ## Modification : 
 # -*- coding: utf-8 -*-
@@ -42,30 +42,6 @@ def normes_erreur(N, Deff, S, Ce, R):
     
     return L1, L2, Linf
 
-# if __name__ == "__main__":
-#     Ns=[5, 10, 20, 40, 80, 200]
-#     L1, L2, Linf = [], [], []
-
-#     for N in Ns:
-#          L1_i, L2_i, Linf_i = D_gen.normes_erreur(N, Deff, S, Ce, R)
-#          L1.append(L1_i)
-#          L2.append(L2_i)
-#          Linf.append(Linf_i)
-    
-
-#     plt.figure(figsize=(6,4.5))
-#     plt.loglog(Ns, L1, 'o-', ms=4, label='L1 erreur')
-#     plt.loglog(Ns, L2, 's-', ms=4, label='L2 erreur')
-#     plt.loglog(Ns, Linf, '^-', ms=4, label='Linf erreur')
-#     plt.xlabel('Nombre de noeuds N')
-#     plt.ylabel('Norme d\'erreur')
-#     plt.title("Erreurs numériques – comparaison des normes")
-#     plt.grid(True, alpha=0.3)
-#     plt.legend()
-#     plt.show()
-#     plt.savefig("Erreurs.png", dpi=300)
-
- 
 # ----------------------------
 # Données de convergence (Ns -> erreurs)
 # ----------------------------
@@ -78,17 +54,6 @@ def convergence_data(Ns, Deff, S, Ce, R):
         L1s.append(L1)
         L2s.append(L2)
         LInfs.append(Linf)
-    return np.array(drs), np.array(L1s), np.array(L2s), np.array(LInfs)
-
-def convergence_data_log(Ns, Deff, S, Ce, R):
-    drs, L1s, L2s, LInfs = [], [], [], []
-    for N in Ns:
-        dr=R/N
-        L1, L2, Linf = normes_erreur(N, Deff, S, Ce, R)
-        drs.append(np.log(dr))
-        L1s.append(np.log(L1))
-        L2s.append(np.log(L2))
-        LInfs.append(np.log(Linf))
     return np.array(drs), np.array(L1s), np.array(L2s), np.array(LInfs)
 
 def ordre_conv(drs, errs):
@@ -105,38 +70,34 @@ def ordre_conv(drs, errs):
 # (2) Analyse de convergence - Calcul symbolique (tracé log–log) 
 # ----------------------------
 def method2_convergence_plot(Ns, Deff, S, Ce, R):
-    logdrs, logL1s, logL2s, logLInfs = (convergence_data_log(Ns, Deff, S, Ce, R))
-    plt.figure(figsize=(6,4.4))
-    # plt.loglog(drs, L1s, 'o-', label='L1')
-    # plt.loglog(drs, L2s, 's-', label='L2')
-    # plt.loglog(drs, LInfs,'d-', label='L∞')
-    plt.plot(logdrs, logL1s, 'o-', label='L1')
-    plt.plot(logdrs, logL2s, 's-', label='L2')
-    plt.plot(logdrs, logLInfs,'d-', label='L∞')
+    drs, L1s, L2s, LInfs = (convergence_data(Ns, Deff, S, Ce, R))
+    plt.loglog(drs, L1s, 'o-', label='L1')
+    plt.loglog(drs, L2s, 's-', label='L2')
+    plt.loglog(drs, LInfs,'d-', label='L∞')
 
     # Ligne de référence pente 1 et 2
     # (simple normalisation sur le premier point pour visualiser les pentes)
-    # ref1 = L1s[0] / (drs[0] )
-    # ref2 = L2s[0] / (drs[0] )
-    # refinf = LInfs[0] / (drs[0] )
+
     drs, L1s, L2s, LInfs = (convergence_data(Ns, Deff, S, Ce, R))
     p1=ordre_conv(drs,L1s)
-    ref1= p1*logdrs + np.abs(p1*logdrs[-1] - logL1s[-1])
+    c1=L1s[-1]/(drs[-1]**p1)
+    ref1= c1*drs**p1 
     p2=ordre_conv(drs,L2s) 
-    ref2= p2*logdrs + np.abs(p2*logdrs[-1] - logL2s[-1])
+    c2=L2s[-1]/(drs[-1]**p2)
+    ref2= c2*drs**p2
     pInf=ordre_conv(drs,LInfs)
-    refInf= pInf*logdrs + np.abs(pInf*logdrs[-1] - logLInfs[-1])
-    plt.plot(logdrs, ref1 ,   'k--', alpha=0.5, label='pente L1')
-    plt.plot(logdrs, ref2 ,'k-.', alpha=0.5, label='pente L2')
-    plt.plot(logdrs, refInf,'k:', alpha=0.5, label='pente Linf')
+    cInf=LInfs[-1]/(drs[-1]**pInf)
+    refInf= cInf*drs**pInf
+    plt.loglog(drs, ref1 ,   'k--', alpha=0.5, label='pente L1')
+    plt.loglog(drs, ref2 ,'k-.', alpha=0.5, label='pente L2')
+    plt.loglog(drs, refInf,'k:', alpha=0.5, label='pente Linf')
 
-    #plt.gca().invert_xaxis()
     plt.xlabel('Δr (ln(Δr)')
     plt.ylabel('Erreur ln(L)')
-    plt.title(f'Convergence – ln(erreurs) vs ln(Δr) ')
+    plt.title(f'Convergence – erreurs L vs Δr (m) ')
     plt.grid(True, which='both', alpha=0.3)
     plt.legend()
-    #plt.tight_layout()
+  
     plt.show()
 
     return drs, L1s, L2s, LInfs
@@ -144,7 +105,6 @@ def method2_convergence_plot(Ns, Deff, S, Ce, R):
 # ----------------------------
 # (3) Estimation de l'ordre de convergence
 # ----------------------------
-
 
 
 def method3_order_report(Ns=(10,20,40,80,160,320),
@@ -155,7 +115,7 @@ def method3_order_report(Ns=(10,20,40,80,160,320),
     pL2   = ordre_conv(drs, L2s)
     pLinf = ordre_conv(drs, LInfs)
 
-    print(f"[Estimation d'ordre] Schéma {scheme}")
+    print(f"[Estimation d'ordre]")
     print(f"  p(L1)  ~ {pL1: .3f} ")
     print(f"  p(L2)  ~ {pL2: .3f}")
     print(f"  p(L∞)  ~ {pLinf: .3f} ")
@@ -170,37 +130,37 @@ def method3_order_report(Ns=(10,20,40,80,160,320),
 #    - Vérifie dC/dr|_0 ≈ 0 par une FD avant d'ordre 2
 #    - Vérifie le résidu de l'équation au centre
 # ----------------------------
-def method4_symmetry_test(N=80, scheme='C',
-                          Deff=Deff, S=S, Ce=Ce, R=R,
-                          show_print=True):
-    r, Cn = D_gen.resout_stationnaire_radial(N, Deff, S, Ce, R)
-    dr = R / N
+# def method4_symmetry_test(N=80, scheme='C',
+#                           Deff=Deff, S=S, Ce=Ce, R=R,
+#                           show_print=True):
+#     r, Cn = D_gen.resout_stationnaire_radial(N, Deff, S, Ce, R)
+#     dr = R / N
 
-    # Dérivée au centre (forward 2e ordre) : C'(0) ≈ (-3C0 + 4C1 - C2)/(2Δr)
-    if N >= 2:
-        dC0 = (-3.0*Cn[0] + 4.0*Cn[1] - Cn[2]) / (2.0*dr)
-    else:
-        dC0 = (Cn[1] - Cn[0]) / dr  # fallback
+#     # Dérivée au centre (forward 2e ordre) : C'(0) ≈ (-3C0 + 4C1 - C2)/(2Δr)
+#     if N >= 2:
+#         dC0 = (-3.0*Cn[0] + 4.0*Cn[1] - Cn[2]) / (2.0*dr)
+#     else:
+#         dC0 = (Cn[1] - Cn[0]) / dr  # fallback
 
-    # Résidu au centre selon l'équation discrète utilisée :
-    # res0 = Deff * 2*(C1 - C0)/dr^2 - S  -> doit être ~ 0
-    res0 = Deff * (2.0 * (Cn[1] - Cn[0]) / dr**2) - S
+#     # Résidu au centre selon l'équation discrète utilisée :
+#     # res0 = Deff * 2*(C1 - C0)/dr^2 - S  -> doit être ~ 0
+#     res0 = Deff * (2.0 * (Cn[1] - Cn[0]) / dr**2) - S
 
-    # Mesures relatives
-    scaleC = max(1.0, np.max(np.abs(Cn)))
-    rel_dC0 = np.abs(dC0) / (np.abs(Ce) + 1e-12)
-    rel_res = np.abs(res0) / (np.abs(S)  + 1e-30)
+#     # Mesures relatives
+#     scaleC = max(1.0, np.max(np.abs(Cn)))
+#     rel_dC0 = np.abs(dC0) / (np.abs(Ce) + 1e-12)
+#     rel_res = np.abs(res0) / (np.abs(S)  + 1e-30)
 
-    if show_print:
-        print(f"[Symétrie] Schéma {scheme}, N={N}")
-        print(f"  dC/dr|_0 (approx)  = {dC0: .6e}  (relatif à Ce ≈ {rel_dC0: .3e})")
-        print(f"  Résidu centre      = {res0: .6e}  (relatif à S  ≈ {rel_res: .3e})")
-        if rel_dC0 < 1e-6 and rel_res < 1e-9:
-            print("  -> Test de symétrie : OK (au niveau précision machine).")
-        else:
-            print("  -> Test de symétrie : vérifier (maillage plus fin ?).")
+#     if show_print:
+#         print(f"[Symétrie] Schéma {scheme}, N={N}")
+#         print(f"  dC/dr|_0 (approx)  = {dC0: .6e}  (relatif à Ce ≈ {rel_dC0: .3e})")
+#         print(f"  Résidu centre      = {res0: .6e}  (relatif à S  ≈ {rel_res: .3e})")
+#         if rel_dC0 < 1e-6 and rel_res < 1e-9:
+#             print("  -> Test de symétrie : OK (au niveau précision machine).")
+#         else:
+#             print("  -> Test de symétrie : vérifier (maillage plus fin ?).")
 
-    return {'dC0': dC0, 'res0': res0, 'rel_dC0': rel_dC0, 'rel_res': rel_res}
+#     return {'dC0': dC0, 'res0': res0, 'rel_dC0': rel_dC0, 'rel_res': rel_res}
 
 # ----------------------------
 # EXEMPLES D'UTILISATION (décommente pour lancer)
@@ -214,7 +174,7 @@ if __name__ == "__main__":
     drs, L1s, L2s, LInfs = method2_convergence_plot(Ns, Deff, S, Ce, R)
 
     # --- 3) Ordre de convergence (impression)
-    rep = method3_order_report(Ns, scheme='E')
+    rep = method3_order_report(Ns)
 
     # --- 4) Symétrie
-    sym = method4_symmetry_test(N=80, scheme='C')
+    #sym = method4_symmetry_test(N=80, scheme='C')
