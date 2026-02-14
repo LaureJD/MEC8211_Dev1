@@ -95,29 +95,23 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     return r, C
 
 
-def normes_erreur(N, Deff, S, Ce, R):
-    r,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)
-    C_analytique=solution_analytique(r, Deff, S, Ce, R)
-    e = C_numerique - C_analytique
-    
-    L1 = np.sum(np.abs(e)) / N
-    L2 = np.sqrt(np.sum(e**2) / N)
-    Linf = np.max(np.abs(e))
-    
-    return L1, L2, Linf
 # ----------------------------
 # a) Profils de concentration
 # ----------------------------
 if __name__ == "__main__":
-    N=5
-    
-    r,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)
-    C_analytique=solution_analytique(r, Deff, S, Ce, R)
+    N=20
+    r_ana=np.linspace(0,R,500)
+
+    r_num,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)
+    C_analytique=solution_analytique(r_ana, Deff, S, Ce, R)
+
+    print(C_numerique)
+    print(C_analytique)
 
     #--- Figure 1 : profil
     plt.figure(figsize=(6,4.5))
-    plt.plot(r, C_analytique, 'k--', lw=2, label='Analytique')
-    plt.plot(r, C_numerique, 'o-', ms=4, label='Numérique (N={})'.format(N))
+    plt.plot(r_ana, C_analytique, 'k--', lw=2, label='Analytique')
+    plt.plot(r_num, C_numerique, 'o-', ms=4, label='Numérique (N={})'.format(N))
     plt.xlabel('r (m)')
     plt.ylabel('Concentration C (mol/m³)')
     plt.title("Profil stationnaire C(r) – comparaison analytique vs numérique")
@@ -126,59 +120,4 @@ if __name__ == "__main__":
     plt.show()
     plt.savefig("N=10.png", dpi=300)
 
-    # --- Figure 2 : 2D cross-section (slice) of the cylinder showing C(x,y)
-    # Build a square grid and map radial solution onto it (mask outside circle)
-    # nx = 200
-    # x = np.linspace(-R, R, nx)
-    # y = np.linspace(-R, R, nx)
-    # X, Y = np.meshgrid(x, y)
-    # Rgrid = np.sqrt(X**2 + Y**2)
-
-    # # prepare 2D concentration array and fill with NaN outside the cylinder
-    # C2D = np.full_like(Rgrid, np.nan, dtype=float)
-    # inside = Rgrid <= R
-
-    # # interpolate the radial numerical solution onto the grid radii
-    # C2D[inside] = np.interp(Rgrid[inside], r, C_numerique)
-
-    # plt.figure(figsize=(6,6))
-    # pcm = plt.pcolormesh(X, Y, C2D, shading='auto', cmap='viridis')
-    # plt.colorbar(pcm, label='Concentration C (mol/m³)')
-    # # add contour lines for clarity
-    # plt.contour(X, Y, C2D, levels=8, colors='k', linewidths=0.5)
-    # plt.title('Concentration cross-section (slice)')
-    # plt.xlabel('x (m)')
-    # plt.ylabel('y (m)')
-    # plt.gca().set_aspect('equal')
-    # plt.tight_layout()
-    #plt.show()
-    #plt.savefig("N=5.png", dpi=300)
  
-
-# ----------------------------
-# Graphique des erreurs
-# ----------------------------
-
-
-# if __name__ == "__main__":
-#     Ns=[5, 10, 20, 40, 80]
-#     L1, L2, Linf = [], [], []
-
-#     for N in Ns:
-#          L1_i, L2_i, Linf_i = normes_erreur(N, Deff, S, Ce, R)
-#          L1.append(L1_i)
-#          L2.append(L2_i)
-#          Linf.append(Linf_i)
-    
-
-#     plt.figure(figsize=(6,4.5))
-#     plt.loglog(Ns, L1, 'o-', ms=4, label='L1 erreur')
-#     plt.loglog(Ns, L2, 's-', ms=4, label='L2 erreur')
-#     plt.loglog(Ns, Linf, '^-', ms=4, label='Linf erreur')
-#     plt.xlabel('Nombre de noeuds N')
-#     plt.ylabel('Norme d\'erreur')
-#     plt.title("Erreurs numériques – comparaison des normes")
-#     plt.grid(True, alpha=0.3)
-#     plt.legend()
-#     plt.show()
-#     plt.savefig("Erreurs.png", dpi=300)
