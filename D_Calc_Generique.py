@@ -38,8 +38,8 @@ def solution_analytique(r, Deff, S, Ce, R):
 
 def resout_stationnaire_radial(N, Deff, S, Ce, R):
     """
-    Résout le problème stationnaire en r sur N+1 points (i=0..N) avec r_N=R.
-    Renvoie r, C_num (taille N+1).
+    Résout le problème stationnaire en r sur N points (i=0..N-1) avec r_N=R.
+    Renvoie r, C_num (taille N).
     Discrétisation 2e ordre :
         - centre (i=0) : stencil symétrique équivalant à dC/dr=0
         - intérieur (1..N-1) : (1/r) d/dr(r dC/dr) ≈ C'' + (1/r) C'
@@ -47,12 +47,12 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     """
     # Maillage
     N = int(N)
-    dr = R / N
-    r = np.linspace(0.0, R, N+1)
+    dr = R / (N-1)
+    r = np.linspace(0.0, R, N)
 
     # Matrice tridiagonale A et vecteur b pour A*C = b
-    A = np.zeros((N+1, N+1), dtype=float)
-    b = np.zeros(N+1, dtype=float)
+    A = np.zeros((N, N), dtype=float)
+    b = np.zeros(N, dtype=float)
 
     # --- Noeud centre i=0 (symétrie: dC/dr = 0)
     # Stencil 2e ordre: C''(0) ≈ (2*(C1 - C0))/dr^2
@@ -64,20 +64,15 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     b[0]    =  S
 
     # --- Noeuds intérieurs i=1..N-1
-    for i in range(1, N):
+    for i in range(1, N-1):
         ri = r[i]
         # Approximation 2e ordre avec terme cylindrique (1/r)*d/dr(r*dC/dr):
-        # Discrétisation correcte : C'' + (1/r)*C'
-        # où les coefficients incluent le facteur r_{i±1/2}/r_i
+        # Schéma non-centré
         
-        a1 = Deff * (1.0 / dr**2)                    # C_{i-1}
-        a2 = -2.0 * Deff / dr**2 - Deff / (ri * dr)  # C_i
-        a3 = Deff * (1.0 / dr**2 + 1.0 / (ri * dr))  # C_{i+1}
+        a1 = Deff * (1.0 / dr**2)                    # Coefficient pour C_{i-1}
+        a2 = -2.0 * Deff / dr**2 - Deff / (ri * dr)  # Coefficient pour C_i
+        a3 = Deff * (1.0 / dr**2 + 1.0 / (ri * dr))  # Coefficient pour C_{i+1}
 
-
-        # a3= (Deff/dr**2) * ((dr**2/ri)-1)
-        # a2= (- Deff / dr**2)*(dr/ri+2)
-        # a1= (Deff/dr**2)
         A[i, i-1] = a1
         A[i, i]   = a2
         A[i, i+1] = a3
@@ -87,8 +82,8 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
     # A[0, 0] = A[1, 0]
     # A[0, 1] = A[1, 1]
     # b[0]    = b[1]
-    A[N, N] = 1.0
-    b[N]    = Ce
+    A[N-1, N-1] = 1.0
+    b[N-1]    = Ce
 
     # Solve
     C = np.linalg.solve(A, b)
@@ -99,7 +94,7 @@ def resout_stationnaire_radial(N, Deff, S, Ce, R):
 # a) Profils de concentration
 # ----------------------------
 if __name__ == "__main__":
-    N=20
+    N=50
     r_ana=np.linspace(0,R,500)
 
     r_num,C_numerique=resout_stationnaire_radial(N, Deff, S, Ce, R)

@@ -48,7 +48,7 @@ def normes_erreur(N, Deff, S, Ce, R):
 def convergence_data(Ns, Deff, S, Ce, R):
     drs, L1s, L2s, LInfs = [], [], [], []
     for N in Ns:
-        dr=R/N
+        dr=R/(N-1)
         L1, L2, Linf = normes_erreur(N, Deff, S, Ce, R)
         drs.append(dr)
         L1s.append(L1)
@@ -92,8 +92,8 @@ def method2_convergence_plot(Ns, Deff, S, Ce, R):
     plt.loglog(drs, ref2 ,'k-.', alpha=0.5, label='pente L2')
     plt.loglog(drs, refInf,'k:', alpha=0.5, label='pente Linf')
 
-    plt.xlabel('Δr (ln(Δr)')
-    plt.ylabel('Erreur ln(L)')
+    plt.xlabel('Δr (m)')
+    plt.ylabel('Erreur L')
     plt.title(f'Convergence – erreurs L vs Δr (m) ')
     plt.grid(True, which='both', alpha=0.3)
     plt.legend()
